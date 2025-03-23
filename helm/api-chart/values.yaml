@@ -1,0 +1,83 @@
+# Default values for api-chart.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/
+replicaCount: 1
+
+# Specifies the Kubernetes ServiceAccount that the pod will use.
+# This should be an existing ServiceAccount in the same namespace.
+# If not set, the default ServiceAccount for the namespace will be used.
+serviceAccountName: python-api-sa
+
+# This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/
+image:
+  repository: dockermohcine/my-python-api
+  # This sets the pull policy for images.
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: "1.1.0"
+
+# This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/
+service:
+  type: NodePort
+  port: 8080
+  targetPort: 8080
+  nodePort: 30080
+
+resources:
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  limits:
+    cpu: "500m"
+    memory: "512Mi"
+  requests:
+    cpu: "250m"
+    memory: "256Mi"
+
+# This section is for setting up autoscaling more information can be found here: https://kubernetes.io/docs/concepts/workloads/autoscaling/
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+# ConfigMap configuration
+config:
+  # The database connection string, used by the application to connect to PostgreSQL.
+  # Format: postgresql://<username>:<password>@<host>:<port>/<database>
+  DATABASE_URL: "postgresql://myuser:password@postgres-service.myapi-dev.svc.cluster.local:5432/mydatabase"
+
+  # The algorithm used for JWT (JSON Web Token) signing.
+  # Common values: HS256, RS256, ES256.
+  JWT_ALGORITHM: "HS256"
+
+  # The expiration time (in minutes) for JWT tokens.
+  # Defines how long a generated token remains valid before requiring reauthentication.
+  JWT_EXPIRE_MINUTES: "30"
+
+  # The URL of the HashiCorp Vault service, used for secrets management.
+  # The application connects here to securely retrieve secrets.
+  VAULT_ADDR: "http://vault.myapi-dev.svc.cluster.local:8200"
+
+  # The Vault role assigned to the application for authentication.
+  # This role determines the permissions the application has when accessing Vault.
+  VAULT_ROLE: "fastapi-app"
+
+
+# Secret configuration
+secret:
+  JWT_SECRET_KEY: "893df6827380466fc9e7a64a6f8d29cb22ff33263eb7a8ba4fe7055d8f9d9082"
+
+
+# Ingress configuration 
+ingress:
+  enabled: true
+  className: nginx  # Change if using another ingress controller
+  host: mtor.example.com  # Change to your domain
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: "/"
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"

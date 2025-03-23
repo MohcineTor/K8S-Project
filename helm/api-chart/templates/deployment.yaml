@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "api-chart.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      app: {{ include "api-chart.name" . }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "api-chart.name" . }}
+    spec:
+      serviceAccountName: {{ .Values.serviceAccountName }}
+      containers:
+        - name: {{ include "api-chart.name" . }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+          - containerPort: {{ .Values.service.port }}
+          {{- with .Values.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          env:
+          - name: VAULT_ADDR
+            valueFrom:
+              configMapKeyRef:
+                name: {{ .Release.Name }}-config
+                key: VAULT_ADDR
+          - name: VAULT_ROLE
+            valueFrom:
+              configMapKeyRef:
+                name: {{ .Release.Name }}-config
+                key: VAULT_ROLE
+          - name: DATABASE_URL
+            valueFrom:
+              configMapKeyRef:
+                name: {{ .Release.Name }}-config
+                key: DATABASE_URL
+          - name: JWT_SECRET_KEY
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Release.Name }}-secret
+                key: JWT_SECRET_KEY
+          - name: JWT_ALGORITHM
+            valueFrom:
+              configMapKeyRef:
+                name: {{ .Release.Name }}-config
+                key: JWT_ALGORITHM
+          - name: JWT_EXPIRE_MINUTES
+            valueFrom:
+              configMapKeyRef:
+                name: {{ .Release.Name }}-config
+                key: JWT_EXPIRE_MINUTES
+

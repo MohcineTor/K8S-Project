@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-init-script
+  namespace: myapi-dev
+data:
+  init.sql: |
+    -- Create user
+    CREATE USER myuser WITH PASSWORD 'password';
+
+    -- Create database
+    CREATE DATABASE mydatabase;
+
+    -- Grant privileges
+    GRANT ALL PRIVILEGES ON DATABASE mydatabase TO myuser;
+
+    -- Switch to mydatabase and create the table
+    \connect mydatabase;
+
+    CREATE TABLE data (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        value VARCHAR(255) NOT NULL
+    );
+
+    -- Grant privileges on table
+    GRANT ALL PRIVILEGES ON TABLE data TO myuser;
+
+    -- 🔹 FIX: Grant privileges on sequence (needed for SERIAL columns)
+    ALTER SEQUENCE data_id_seq OWNED BY data.id;
+    GRANT USAGE, SELECT, UPDATE ON SEQUENCE data_id_seq TO myuser;

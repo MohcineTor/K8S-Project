@@ -1,0 +1,23 @@
+server:
+  dev:
+    enabled: false
+  ha:
+    enabled: true
+    replicas: 1  
+    config: |
+      ui = true
+
+      listener "tcp" {
+        tls_disable = 1
+        address = "[::]:8200"
+        cluster_address = "[::]:8201"
+      }
+      storage "file" {
+        path = "/vault/data"
+      }  
+  service:
+    type: ClusterIP
+  authDelegator:
+    enabled: true   # Allow Vault to use Kubernetes auth
+ui:
+  enabled: true     # Enable the Vault UI
